@@ -1,8 +1,9 @@
 const dotenv = require('dotenv').config();
 const express = require('express');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
-const app = express();
 const cors = require('cors');
+
+const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
@@ -13,7 +14,6 @@ app.use(express.json());
 app.use(cors());
 
 app.post('/api/chatCompletion', async (req, res) => {
-
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
