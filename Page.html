@@ -31,7 +31,7 @@
         }
         .left > h1, .left > p {
             align-self: center; /* Center the heading and paragraph in the left div */
-            width: 100%; /* Optional: In case you need these elements to maintain a specific width */
+            width: 100%; 
         }
         nav ul {
             list-style: none;
@@ -88,6 +88,10 @@
         </form>
         <p>Response:</p>
         <p id="response"></p>
+        <div id="action-buttons" style="display:none;">
+            <button id="revertChanges">Revert Changes</button>
+            <button id="confirmChanges">Confirm Changes</button>
+        </div>
     </div>
 </body>
 </html>
