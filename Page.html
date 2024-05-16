@@ -81,9 +81,9 @@
     <div class="right">
         <h1>Right Section (For chatbot/adaptive UI implementation)</h1>
         <p>This is the right side of the page where the chat GPT/adaptive UI user input section will be implemented</p>
-        <form id="chatbotForm">
+        <form id="chatbotForm" style="display: flex; flex-direction: column; width: 520px;">
             <label for="chatbotInput"> Enter a prompt here: </label>
-            <input type="text" id="chatbotInput">
+            <textarea type="text" id="chatbotInput" style="width: 500px; height: 200px;"> </textarea>
             <input type="submit" value="Submit">
         </form>
         <p>Response:</p>
