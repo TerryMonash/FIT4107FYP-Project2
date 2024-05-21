@@ -5,7 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 
 const htmlData = fs.readFileSync(
-    '../Page.html',
+    '.././Left.html',
     'utf-8'
 )
 const app = express();
@@ -27,7 +27,7 @@ app.post('/api/chatCompletion', async (req, res) => {
                 'Authorization': `Bearer ${process.env['OPENAI_API_KEY']}`
             },
             body: JSON.stringify({
-                model: "gpt-4o",
+                model: "gpt-4",
                 messages: [
                     {
                         role: "system",
@@ -37,12 +37,12 @@ app.post('/api/chatCompletion', async (req, res) => {
                     {
                         role: "system",
                         content:
-                            "It is VERY important that you ONLY give the provided HTML code with the changes as your response as your response will directly be added to the Left Hand Side of the website. DO NOT output anything but that."
+                            "It is VERY important that you ONLY give the provided HTML code with the changes as your response as your response will directly be added to the Left Hand Side of the website. DO NOT output anything but that. You are to provide the entire code given to you with the requested changes and not just the changes by themselves."
                     },
                     {
                         role: "system",
                         content:
-                            "It is also important to only modify the Left Hand Side of the website, as YOU are the Right Hand Side"
+                            "The code you provide will be shown to the user on the right hand side of the website in contrast to the left hand side being normal. Which is why it is VERY important to return the entire code WITH the requested changes and NOT just the required changes"
                     },
                     {
                         role: "system",

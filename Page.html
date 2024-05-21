@@ -4,96 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Adaptive UI Page Example</title>
-    <script src="Chatbot.js" defer></script>
     <style>
         body {
-            display: flex;   /* Use flexbox to create a flexible layout */
-            margin: 0;       /* Remove default margin */
-            height: 100vh;   /* Full viewport height */
+            display: flex;   
+            margin: 0;       
+            height: 100vh;   
         }
-        .left, .right {
-            flex: 1;         /* Both sections take up equal space */
-            display: flex;
-            justify-content: center; /* Center content horizontally */
-            align-items: center;     /* Center content vertically */
-            padding: 20px;           /* Padding for some space inside the sections */
-        }
-        .left {
-            flex-direction: column;
-            align-items: flex-start; /* Align items to the start of the flex container */
-            justify-content: flex-start; /* Start content from the top */
-        }
-        .right {
-            flex-direction: column;
-            align-items: flex-start; /* Align items to the start of the flex container */
-            justify-content: flex-start; /* Start content from the top */
-            background-color: #e9ecef; /* Slightly darker grey background for the right section */
-        }
-        .left > h1, .left > p {
-            align-self: center; /* Center the heading and paragraph in the left div */
-            width: 100%; /* Optional: In case you need these elements to maintain a specific width */
-        }
-        nav ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            display: flex; /* This makes the list horizontal */
-        }
-        nav ul li {
-            padding: 10px;
-            background-color: #ddd; /* Light grey background for each nav item */
-            margin-right: 5px; /* Adds space between the menu items */
-        }
-        nav ul li:hover {
-            background-color: #ccc; /* Slightly darker grey on hover */
-        }
-        .square-box {
-            width: 500px;  /* Size of the square */
-            height: 200px; /* Height equal to the width to make it a square */
-            background-color: yellow; /* Yellow background */
-            margin-top: 20px; /* Some space above the square */
-        }
-        h2 {
-            font-family: 'Arial', sans-serif; /* Sets the font family */
-            font-size: 24px;                  /* Sets the font size */
-            font-weight: bold;                /* Makes the font bold */
-            color: #333;                      /* Sets the font color */
-        }
-        .loading {
-            display: none;
-            font-size: 18px;
-            color: #666;
+        iframe {
+            flex: 1;         
+            border: none;   
         }
     </style>
 </head>
 <body>
-    <div class="left">
-        <nav>
-            <ul>
-                <li>Home</li>
-                <li>About</li>
-                <li>Profile</li>
-                <li>Settings</li>
-            </ul>
-        </nav>
-        <h1>Left Section (For elements to play around with)</h1>
-        <h2>Different header to play around with</h2>
-        <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse vitae elit id ante ornare porttitor. Cras malesuada quam non quam ullamcorper, in pellentesque ligula pellentesque. Donec a neque purus. Quisque finibus turpis quam, sit amet tincidunt urna porta in. Nam placerat urna nunc, eu aliquet tortor rutrum nec. Etiam id purus nunc. Morbi risus sem, imperdiet at tempor in, bibendum tempus quam. Duis tincidunt blandit lorem, et finibus arcu luctus eget. Nullam maximus, felis ac aliquet faucibus, nisi urna vehicula libero, ac tempor tortor ligula quis quam. Nullam nec varius nunc. Vestibulum pulvinar, elit at fringilla commodo, enim sapien tincidunt ligula, eu efficitur urna mauris vitae elit. Pellentesque habitant morbi tristique senectus et netus et malesuada fames ac turpis egestas. Aenean luctus ipsum neque, vel scelerisque nisi tempor nec.
-        </p>
-        <div class="square-box"></div>
-    </div>
-    <div class="right">
-        <h1>Right Section (For chatbot/adaptive UI implementation)</h1>
-        <p>This is the right side of the page where the chat GPT/adaptive UI user input section will be implemented</p>
-        <form id="chatbotForm" style="display: flex; flex-direction: column; width: 520px;">
-            <label for="chatbotInput"> Enter a prompt here: </label>
-            <textarea id="chatbotInput" style="width: 500px; height: 200px;"></textarea>
-            <input type="submit" value="Submit">
-        </form>
-        <p>Response:</p>
-        <p id="response"></p>
-        <p class="loading" id="loading">Loading...</p>
-    </div>
+    <iframe src="Left.html" id="leftFrame"></iframe>
+    <iframe src="Right.html" id="rightFrame"></iframe>
 </body>
 </html>

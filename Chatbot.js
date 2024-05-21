@@ -17,6 +17,7 @@ document.getElementById("chatbotForm").addEventListener("submit", async function
         });
 
         const data = await response.json();
+        console.log(data.choices[0].message.content);
         responseElement.innerHTML = data.choices[0].message.content;
     } catch (error) {
         responseElement.innerHTML = 'Error: ' + error.message;
