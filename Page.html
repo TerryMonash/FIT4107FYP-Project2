@@ -59,6 +59,11 @@
             font-weight: bold;                /* Makes the font bold */
             color: #333;                      /* Sets the font color */
         }
+        .loading {
+            display: none;
+            font-size: 18px;
+            color: #666;
+        }
     </style>
 </head>
 <body>
@@ -83,11 +88,12 @@
         <p>This is the right side of the page where the chat GPT/adaptive UI user input section will be implemented</p>
         <form id="chatbotForm" style="display: flex; flex-direction: column; width: 520px;">
             <label for="chatbotInput"> Enter a prompt here: </label>
-            <textarea type="text" id="chatbotInput" style="width: 500px; height: 200px;"> </textarea>
+            <textarea id="chatbotInput" style="width: 500px; height: 200px;"></textarea>
             <input type="submit" value="Submit">
         </form>
         <p>Response:</p>
         <p id="response"></p>
+        <p class="loading" id="loading">Loading...</p>
     </div>
 </body>
 </html>

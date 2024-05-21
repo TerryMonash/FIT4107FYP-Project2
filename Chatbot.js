@@ -1,6 +1,11 @@
 document.getElementById("chatbotForm").addEventListener("submit", async function (event) {
     event.preventDefault();
     let input = document.getElementById("chatbotInput").value;
+    let responseElement = document.getElementById("response");
+    let loadingElement = document.getElementById("loading");
+
+    responseElement.innerHTML = "";
+    loadingElement.style.display = "block"; // Show loading indicator
 
     try {
         const response = await fetch('http://localhost:3000/api/chatCompletion', {
@@ -12,8 +17,10 @@ document.getElementById("chatbotForm").addEventListener("submit", async function
         });
 
         const data = await response.json();
-        document.getElementById("response").innerHTML = data.choices[0].message.content;
+        responseElement.innerHTML = data.choices[0].message.content;
     } catch (error) {
-        console.log('Error: ', error)
+        responseElement.innerHTML = 'Error: ' + error.message;
+    } finally {
+        loadingElement.style.display = "none"; // Hide loading indicator
     }
 });
