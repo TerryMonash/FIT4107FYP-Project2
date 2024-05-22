@@ -17,8 +17,24 @@ document.getElementById("chatbotForm").addEventListener("submit", async function
         });
 
         const data = await response.json();
-        console.log(data.choices[0].message.content);
-        responseElement.innerHTML = data.choices[0].message.content;
+        const htmlContent = data.choices[0].message.content;
+
+        // Insert HTML content into the response element
+        responseElement.innerHTML = htmlContent;
+        console.log(htmlContent);
+
+        // Extract and execute any script elements
+        const scripts = responseElement.getElementsByTagName('script');
+        for (let i = 0; i < scripts.length; i++) {
+            const script = scripts[i];
+            const newScript = document.createElement('script');
+            if (script.src) {
+                newScript.src = script.src;
+            } else {
+                newScript.innerHTML = script.innerHTML;
+            }
+            document.body.appendChild(newScript);
+        }
     } catch (error) {
         responseElement.innerHTML = 'Error: ' + error.message;
     } finally {
