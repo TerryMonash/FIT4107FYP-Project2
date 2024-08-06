@@ -35,11 +35,10 @@
     <p>This is the right side of the page where the chat GPT/adaptive UI user input section will be implemented</p>
     <p>Here are some buttons to test the adaptive UI:</p>
     <p>
-        <button>Make Interface Bigger</button>
-        <button>Make Interface Smaller</button>
-        <button>Change Box to Red</button>
-        <button>Change Font Size</button>
-
+        <button id="biggerButton">Make Interface Bigger</button>
+        <button id="smallerButton">Make Interface Smaller</button>
+        <button id="redButton">Change Box to Red</button>
+        <button id="fontSizeButton">Change Font Size</button>
     </p>
     <form id="chatbotForm">
         <label for="chatbotInput"> Enter a prompt here: </label>
@@ -49,5 +48,31 @@
     <p>Response:</p>
     <p id="response"></p>
     <p class="loading" id="loading">Loading...</p>
+
+    <script>
+        function addPromptAndSubmit(prompt) {
+            const input = document.getElementById("chatbotInput");
+            input.value = prompt;
+            document.getElementById("chatbotForm").dispatchEvent(new Event('submit'));
+        }
+
+        document.getElementById("biggerButton").addEventListener("click", function() {
+            addPromptAndSubmit("Make the Interface Bigger");
+        });
+
+        document.getElementById("smallerButton").addEventListener("click", function() {
+            addPromptAndSubmit("Make the Interface Smaller");
+        });
+
+        document.getElementById("redButton").addEventListener("click", function() {
+            addPromptAndSubmit("Change the Box colour to Red");
+        });
+
+        document.getElementById("fontSizeButton").addEventListener("click", function() {
+            addPromptAndSubmit("Change the Font Size");
+        });
+
+
+    </script>
 </body>
 </html>
