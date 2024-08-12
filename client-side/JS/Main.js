@@ -1,5 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js"
+import { getFirestore, doc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
 
 
 const firebaseConfig = {
@@ -14,6 +16,8 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore();
+const storage = getStorage();
 
 const APP_PAGE = "../Chatbot/Page.html";
 
@@ -93,6 +97,36 @@ if (document.getElementById("chatbotForm") != null) {
             responseElement.innerHTML = htmlContent;
             console.log(htmlContent);
 
+            const user = auth.currentUser;
+            if (user) {
+                const userId = user.uid;
+
+                // Corrected the typo in the storage path ("user_date" -> "user_data")
+                const promptsCollectionRef = collection(db, "user_data", userId, "prompts");
+
+                let codeStorageUrl = null;
+                if (htmlContent.length > 1000000) {
+                    const codeRef = ref(storage, `user_data/${userId}/generatedCode.html`);
+                    await uploadString(codeRef, htmlContent, 'raw', { contentType: 'text/html' });
+                    codeStorageUrl = await getDownloadURL(codeRef);
+                }
+
+                try {
+                    await addDoc(promptsCollectionRef, {
+                        prompt: input,
+                        generatedCode: codeStorageUrl ? null : htmlContent,
+                        codeStorageUrl: codeStorageUrl,
+                        timestamp: Date.now()
+                    });
+
+                    console.log('Data has been saved!');
+                } catch (error) {
+                    console.error('Error saving data:', error);
+                }
+            } else {
+                console.log("Data was not saved! Try making sure you're logged in!");
+            }
+
             // Extract and execute any script elements
             const scripts = responseElement.getElementsByTagName('script');
             for (let i = 0; i < scripts.length; i++) {
@@ -111,5 +145,4 @@ if (document.getElementById("chatbotForm") != null) {
             loadingElement.style.display = "none"; // Hide loading indicator
         }
     });
-
 }
