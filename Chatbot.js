@@ -43,46 +43,28 @@ document.getElementById("chatbotForm").addEventListener("submit", async function
 });
 
 
-document.getElementById("suggestionForm").addEventListener("submit", async function (event) {
-    event.preventDefault();
-    let responseElement = document.getElementById("response");
-    let loadingElement = document.getElementById("loading");
-
-    responseElement.innerHTML = "";
-    loadingElement.style.display = "block"; // Show loading indicator
-
+document.getElementById('suggestChangesButton').addEventListener('click', async () => {
     try {
-        const response = await fetch('http://localhost:3000/api/suggestions', {
+        const response = await fetch('http://localhost:3000/api/suggestChanges', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ message: input })
+            }
         });
 
-        const data = await response.json();
-        const htmlContent = data.choices[0].message.content;
-
-        // Insert HTML content into the response element
-        responseElement.innerHTML = htmlContent;
-        console.log(htmlContent);
-
-        // Extract and execute any script elements
-        const scripts = responseElement.getElementsByTagName('script');
-        for (let i = 0; i < scripts.length; i++) {
-            const script = scripts[i];
-            const newScript = document.createElement('script');
-            if (script.src) {
-                newScript.src = script.src;
-            } else {
-                newScript.innerHTML = script.innerHTML;
-            }
-            document.body.appendChild(newScript);
+        if (!response.ok) {
+            throw new Error('Failed to fetch suggestions');
         }
+
+        const data = await response.json();
+        const suggestedHtml = data.choices[0].message.content;
+
+        document.getElementById('suggestionResponse').innerHTML = suggestedHtml;
+
     } catch (error) {
-        responseElement.innerHTML = 'Error: ' + error.message;
-    } finally {
-        loadingElement.style.display = "none"; // Hide loading indicator
+        console.error('Error:', error.message);
+        document.getElementById('suggestionResponse').textContent = 'An error occurred while fetching suggestions.';
     }
 });
+
 
