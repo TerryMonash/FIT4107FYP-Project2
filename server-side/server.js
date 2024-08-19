@@ -7,7 +7,7 @@ const fs = require('fs');
 const htmlData = fs.readFileSync(
     '../client-side/Chatbot/Left.html',
     'utf-8'
-)
+);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -22,6 +22,7 @@ app.post('/api/chatCompletion', async (req, res) => {
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
+            temperature: 0.3,
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${process.env['OPENAI_API_KEY']}`
