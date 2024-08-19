@@ -47,6 +47,11 @@ app.post('/api/chatCompletion', async (req, res) => {
                     {
                         role: "system",
                         content:
+                           "If the user requests you to create an Image, DO NOT use an image file, it is IMPORTANT YOU DO NOT MAKE AN IMAGE FILE, try an style the image."
+                    },
+                    {
+                        role: "system",
+                        content:
                             "The HTML Code is:" + htmlData
                     },
                     {
@@ -71,8 +76,8 @@ app.post('/api/chatCompletion', async (req, res) => {
     }
 });
 
-// New endpoint for a suggestions
-app.post('/api/suggestions', async (req, res) => {
+
+app.post('/api/suggestChanges', async (req, res) => {
     try {
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -81,27 +86,21 @@ app.post('/api/suggestions', async (req, res) => {
                 'Authorization': `Bearer ${process.env['OPENAI_API_KEY']}`
             },
             body: JSON.stringify({
-                model: "gpt-4o",
+                model: "gpt-4",
                 messages: [
                     {
                         role: "system",
                         content:
-                            "You are a chatbot on the Right Hand Side of a website that listens to various adaptations/changes that a user wants to do on the Left Hand Side of the website. You will be provided with some HTML code and you are required to output some suggestions to change on the left hand side."
+                            "You are an AI assistant tasked with providing suggestions to improve the visual and user experience aspects of HTML code. You are to provide worded, dot-point suggestions only. Do not ask any questions, request additional input, or provide any HTML code. Simply list the suggestions for improvement."
                     },
                     {
                         role: "system",
                         content:
-                            "It is VERY important that you ONLY give worded suggestions. DO NOT output anything but that. DO NOT output any code, You are to provide the suggestions. ENSURE the suggestions are dot pointed and kept between 10-30 words."
-                    },
-
-                    {
-                        role: "system",
-                        content:
-                            "The HTML Code is:" + htmlData
+                            "Here is the HTML code you need to evaluate: " + htmlData
                     },
                     {
                         role: "user",
-                        content: req.body.message
+                        content: "Please suggest some improvements for the HTML code to enhance the user experience."
                     }
                 ]
             })
@@ -120,4 +119,8 @@ app.post('/api/suggestions', async (req, res) => {
         res.status(500).send('An error occurred: ' + error.message);
     }
 });
+
+
+
+
 
