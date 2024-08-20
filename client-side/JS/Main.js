@@ -173,12 +173,30 @@ if (document.getElementById("chatbotForm") != null) {
         loadingElement.style.display = "block"; // Show loading indicator
 
         try {
+            const user = auth.currentUser;
+
+            if (!user) {
+                throw new Error("No user is signed in.");
+            }
+
+            // Fetch the latest HTML version
+            const userDocRef = doc(db, "accounts", user.uid);
+            const docSnap = await getDoc(userDocRef);
+            if (!docSnap.exists()) {
+                throw new Error("User document not found.");
+            }
+            const latestHTML = docSnap.data().currentLeftHTML;
+
+            // Send both the user input and the latest HTML to the AI
             const response = await fetch('http://localhost:3000/api/chatCompletion', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ message: input })
+                body: JSON.stringify({
+                    message: input,
+                    currentHTML: latestHTML
+                })
             });
 
             const data = await response.json();
@@ -213,7 +231,6 @@ if (document.getElementById("chatbotForm") != null) {
             document.getElementById('acceptResponse').addEventListener('click', () => handleResponse(true, htmlContent));
             document.getElementById('denyResponse').addEventListener('click', () => handleResponse(false, htmlContent));
 
-            const user = auth.currentUser;
             if (user) {
                 const userId = user.uid;
 

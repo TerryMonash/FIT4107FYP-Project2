@@ -2,12 +2,7 @@ const dotenv = require('dotenv').config();
 const express = require('express');
 const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
 const cors = require('cors');
-const fs = require('fs');
 
-const htmlData = fs.readFileSync(
-    '../client-side/Chatbot/Left.html',
-    'utf-8'
-);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -20,6 +15,8 @@ app.use(cors());
 
 app.post('/api/chatCompletion', async (req, res) => {
     try {
+        const { message, currentHTML } = req.body;
+
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             temperature: 0.3,
@@ -46,13 +43,8 @@ app.post('/api/chatCompletion', async (req, res) => {
                             "The code you provide will be shown to the user on the right hand side of the website in contrast to the left hand side being normal. Which is why it is VERY important to return the entire code WITH the requested changes and NOT just the required changes"
                     },
                     {
-                        role: "system",
-                        content:
-                            "The HTML Code is:" + htmlData
-                    },
-                    {
                         role: "user",
-                        content: req.body.message
+                        content: `Current HTML:\n${currentHTML}\n\nUser request: ${message}\n\nPlease modify the HTML based on the user's request and return the entire updated HTML document.`
                     }
                 ]
             })
