@@ -5,7 +5,7 @@ const cors = require('cors');
 const fs = require('fs');
 
 const htmlData = fs.readFileSync(
-    '.././Left.html',
+    '../client-side/Chatbot/Left.html',
     'utf-8'
 )
 const app = express();
