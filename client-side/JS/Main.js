@@ -1,7 +1,20 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
-import { getFirestore, doc, collection, addDoc, setDoc, getDoc, updateDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+    getFirestore,
+    doc,
+    collection,
+    addDoc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    serverTimestamp,
+    query,
+    orderBy,
+    limit,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -118,8 +131,7 @@ if (document.getElementById('register-submit') != null) {
         const password = document.getElementById('register-password').value;
 
         createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed up 
+            .then(async (userCredential) => {
                 const user = userCredential.user;
                 console.log('Created user');
 
@@ -127,17 +139,20 @@ if (document.getElementById('register-submit') != null) {
 
                 const account = {
                     useruid: userUid,
-                    LeftHTML: htmlData
+                    currentLeftHTMLVersion: 1,
+                    currentLeftHTML: htmlData
                 }
 
-                setDoc(doc(db, 'accounts', userUid), account)
-                    .then(() => {
-                        console.log("Document successfully written!");
-                        window.location.href = APP_PAGE;
-                    })
-                    .catch((error) => {
-                        console.error("Error writing document: ", error);
-                    });
+                await setDoc(doc(db, 'accounts', userUid), account);
+
+                // Add initial version to leftHTML_versions subcollection
+                const versionsCollectionRef = collection(db, "accounts", userUid, "leftHTML_versions");
+                await addDoc(versionsCollectionRef, {
+                    html: htmlData,
+                    timestamp: serverTimestamp()
+                });
+
+                window.location.href = APP_PAGE;
             })
             .catch((error) => {
                 const errorCode = error.code;
@@ -235,6 +250,8 @@ if (document.getElementById("chatbotForm") != null) {
     });
 }
 
+let leftFrameLoadAttempts = 0;
+
 async function handleResponse(accepted, htmlContent) {
     if (accepted) {
         const user = auth.currentUser;
@@ -244,20 +261,24 @@ async function handleResponse(accepted, htmlContent) {
             try {
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
-                    const userData = docSnap.data();
-                    const currentLeftHTML = userData.LeftHTML || '';
-                    const newLeftHTML = currentLeftHTML + htmlContent;
+                    const versionsCollectionRef = collection(db, "accounts", user.uid, "leftHTML_versions");
 
-                    await updateDoc(userDocRef, { LeftHTML: newLeftHTML });
+                    // Add new version
+                    await addDoc(versionsCollectionRef, {
+                        html: htmlContent,
+                        timestamp: serverTimestamp()
+                    });
+
+                    // Update the main document to point to the latest version
+                    await updateDoc(userDocRef, {
+                        currentLeftHTMLVersion: docSnap.data().currentLeftHTMLVersion + 1 || 1,
+                        currentLeftHTML: htmlContent
+                    });
+
                     console.log("LeftHTML updated successfully");
 
                     // Notify the left iframe to update its content
-                    const leftFrame = document.getElementById('leftFrame');
-                    if (leftFrame && leftFrame.contentWindow) {
-                        leftFrame.contentWindow.postMessage('updateContent', '*');
-                    } else {
-                        console.error("Left iframe not found or not accessible");
-                    }
+                    notifyLeftFrame();
                 } else {
                     console.log("No such document!");
                 }
@@ -271,3 +292,26 @@ async function handleResponse(accepted, htmlContent) {
         console.log("Response denied");
     }
 }
+
+function notifyLeftFrame() {
+    if (window.leftFrameLoaded) {
+        const leftFrame = document.getElementById('leftFrame');
+        if (leftFrame && leftFrame.contentWindow) {
+            leftFrame.contentWindow.postMessage('updateContent', '*');
+        } else {
+            console.error("Left iframe not found or not accessible");
+        }
+    } else {
+        leftFrameLoadAttempts++;
+        if (leftFrameLoadAttempts < 10) {  // Try for about 5 seconds
+            setTimeout(notifyLeftFrame, 500);
+        } else {
+            console.error("Left iframe failed to load after multiple attempts");
+        }
+    }
+}
+
+// Reset attempts when the page loads
+window.addEventListener('load', () => {
+    leftFrameLoadAttempts = 0;
+});

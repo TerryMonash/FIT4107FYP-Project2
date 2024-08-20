@@ -17,7 +17,12 @@
     </style>
 </head>
 <body>
-    <iframe src="Left.html" id="leftFrame"></iframe>
+    <iframe src="Left.html" id="leftFrame" name="leftFram" onload="frameLoaded()"></iframe>
     <iframe src="Right.html" id="rightFrame"></iframe>
 </body>
+<script>
+    function frameLoaded() {
+        window.leftFrameloaded = true;
+    }
+</script>
 </html>

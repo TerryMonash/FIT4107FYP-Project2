@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import { getFirestore, doc, getDoc, collection, query, orderBy, limit, getDocs } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
     apiKey: "AIzaSyC08ZzFONNjJWqK88YdXTPNL04WDDLyHG8",
@@ -16,22 +16,25 @@ const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
 
-function updateContent() {
+async function updateContent() {
     const user = auth.currentUser;
     if (user) {
         const userDocRef = doc(db, "accounts", user.uid);
-
-        getDoc(userDocRef).then((docSnap) => {
+        try {
+            const docSnap = await getDoc(userDocRef);
             if (docSnap.exists()) {
                 const userData = docSnap.data();
-                const leftHTML = userData.LeftHTML;
-                document.getElementById('leftContent').innerHTML = leftHTML;
+                if (userData.currentLeftHTML) {
+                    document.body.innerHTML = userData.currentLeftHTML;
+                } else {
+                    console.log("No current HTML found!");
+                }
             } else {
                 console.log("No such document!");
             }
-        }).catch((error) => {
+        } catch (error) {
             console.log("Error getting document:", error);
-        });
+        }
     } else {
         console.log("No user is signed in.");
     }
@@ -51,3 +54,6 @@ window.addEventListener('message', (event) => {
         updateContent();
     }
 }, false);
+
+// Notify the parent window that the frame is loaded
+window.parent.postMessage('leftFrameLoaded', '*');
