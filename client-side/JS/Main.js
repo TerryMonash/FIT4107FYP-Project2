@@ -1,7 +1,20 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js"
-import { getFirestore, doc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
+import {
+    getFirestore,
+    doc,
+    collection,
+    addDoc,
+    setDoc,
+    getDoc,
+    updateDoc,
+    serverTimestamp,
+    query,
+    orderBy,
+    limit,
+    getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 
 const firebaseConfig = {
@@ -20,6 +33,69 @@ const db = getFirestore();
 const storage = getStorage();
 
 const APP_PAGE = "../Chatbot/Page.html";
+
+const htmlData = (
+    `<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Left Section</title>
+        <style>
+            body {
+                display: flex;
+                flex-direction: column;
+                align-items: flex-start;
+                justify-content: flex-start;
+                padding: 20px;
+            }
+            nav ul {
+                list-style: none;
+                padding: 0;
+                margin: 0;
+                display: flex;
+            }
+            nav ul li {
+                padding: 10px;
+                background-color: #ddd;
+                margin-right: 5px;
+            }
+            nav ul li:hover {
+                background-color: #ccc;
+            }
+            .square-box {
+                width: 500px;
+                height: 200px;
+                background-color: yellow;
+                margin-top: 20px;
+            }
+            h2 {
+                font-family: 'Arial', sans-serif;
+                font-size: 24px;
+                font-weight: bold;
+                color: #333;
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <ul>
+                <li>Home</li>
+                <li>About</li>
+                <li>Profile</li>
+                <li>Settings</li>
+            </ul>
+        </nav>
+        <h1>Left Section (For elements to play around with)</h1>
+        <h2>Different header to play around with</h2>
+        <p>
+            THIS WAS FETCHED FROM FIREBASE!
+        </p>
+        <div class="square-box"></div>
+    </body>
+    </html>
+`
+)
 
 if (document.getElementById('login-submit') != null) {
     const loginSubmit = document.getElementById('login-submit');
@@ -55,18 +131,33 @@ if (document.getElementById('register-submit') != null) {
         const password = document.getElementById('register-password').value;
 
         createUserWithEmailAndPassword(auth, email, password)
-            .then((userCredential) => {
-                // Signed up 
+            .then(async (userCredential) => {
                 const user = userCredential.user;
-                console.log('Creating user');
+                console.log('Created user');
+
+                const userUid = user.uid;
+
+                const account = {
+                    useruid: userUid,
+                    currentLeftHTMLVersion: 1,
+                    currentLeftHTML: htmlData
+                }
+
+                await setDoc(doc(db, 'accounts', userUid), account);
+
+                // Add initial version to leftHTML_versions subcollection
+                const versionsCollectionRef = collection(db, "accounts", userUid, "leftHTML_versions");
+                await addDoc(versionsCollectionRef, {
+                    html: htmlData,
+                    timestamp: serverTimestamp()
+                });
+
                 window.location.href = APP_PAGE;
-                // ...
             })
             .catch((error) => {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log(errorMessage);
-                // ..
             });
     });
 }
@@ -82,12 +173,30 @@ if (document.getElementById("chatbotForm") != null) {
         loadingElement.style.display = "block"; // Show loading indicator
 
         try {
+            const user = auth.currentUser;
+
+            if (!user) {
+                throw new Error("No user is signed in.");
+            }
+
+            // Fetch the latest HTML version
+            const userDocRef = doc(db, "accounts", user.uid);
+            const docSnap = await getDoc(userDocRef);
+            if (!docSnap.exists()) {
+                throw new Error("User document not found.");
+            }
+            const latestHTML = docSnap.data().currentLeftHTML;
+
+            // Send both the user input and the latest HTML to the AI
             const response = await fetch('http://localhost:3000/api/chatCompletion', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ message: input })
+                body: JSON.stringify({
+                    message: input,
+                    currentHTML: latestHTML
+                })
             });
 
             const data = await response.json();
@@ -97,11 +206,34 @@ if (document.getElementById("chatbotForm") != null) {
             responseElement.innerHTML = htmlContent;
             console.log(htmlContent);
 
-            const user = auth.currentUser;
+            // Extract and execute any script elements
+            const scripts = responseElement.getElementsByTagName('script');
+            for (let i = 0; i < scripts.length; i++) {
+                const script = scripts[i];
+                const newScript = document.createElement('script');
+                if (script.src) {
+                    newScript.src = script.src;
+                } else {
+                    newScript.innerHTML = script.innerHTML;
+                }
+                document.body.appendChild(newScript);
+            }
+
+            // Add accept/deny options
+            const optionsDiv = document.createElement('div');
+            optionsDiv.innerHTML = `
+                <button id="acceptResponse">Accept Response</button>
+                <button id="denyResponse">Deny Response</button>
+            `;
+            responseElement.appendChild(optionsDiv);
+
+            // Add event listeners for accept/deny buttons
+            document.getElementById('acceptResponse').addEventListener('click', () => handleResponse(true, htmlContent));
+            document.getElementById('denyResponse').addEventListener('click', () => handleResponse(false, htmlContent));
+
             if (user) {
                 const userId = user.uid;
 
-                // Corrected the typo in the storage path ("user_date" -> "user_data")
                 const promptsCollectionRef = collection(db, "user_data", userId, "prompts");
 
                 let codeStorageUrl = null;
@@ -127,18 +259,6 @@ if (document.getElementById("chatbotForm") != null) {
                 console.log("Data was not saved! Try making sure you're logged in!");
             }
 
-            // Extract and execute any script elements
-            const scripts = responseElement.getElementsByTagName('script');
-            for (let i = 0; i < scripts.length; i++) {
-                const script = scripts[i];
-                const newScript = document.createElement('script');
-                if (script.src) {
-                    newScript.src = script.src;
-                } else {
-                    newScript.innerHTML = script.innerHTML;
-                }
-                document.body.appendChild(newScript);
-            }
         } catch (error) {
             responseElement.innerHTML = 'Error: ' + error.message;
         } finally {
@@ -146,3 +266,69 @@ if (document.getElementById("chatbotForm") != null) {
         }
     });
 }
+
+let leftFrameLoadAttempts = 0;
+
+async function handleResponse(accepted, htmlContent) {
+    if (accepted) {
+        const user = auth.currentUser;
+        if (user) {
+            const userDocRef = doc(db, "accounts", user.uid);
+
+            try {
+                const docSnap = await getDoc(userDocRef);
+                if (docSnap.exists()) {
+                    const versionsCollectionRef = collection(db, "accounts", user.uid, "leftHTML_versions");
+
+                    // Add new version
+                    await addDoc(versionsCollectionRef, {
+                        html: htmlContent,
+                        timestamp: serverTimestamp()
+                    });
+
+                    // Update the main document to point to the latest version
+                    await updateDoc(userDocRef, {
+                        currentLeftHTMLVersion: docSnap.data().currentLeftHTMLVersion + 1 || 1,
+                        currentLeftHTML: htmlContent
+                    });
+
+                    console.log("LeftHTML updated successfully");
+
+                    // Notify the left iframe to update its content
+                    notifyLeftFrame();
+                } else {
+                    console.log("No such document!");
+                }
+            } catch (error) {
+                console.error("Error updating document: ", error);
+            }
+        } else {
+            console.log("No user is signed in.");
+        }
+    } else {
+        console.log("Response denied");
+    }
+}
+
+function notifyLeftFrame() {
+    if (window.leftFrameLoaded) {
+        const leftFrame = document.getElementById('leftFrame');
+        if (leftFrame && leftFrame.contentWindow) {
+            leftFrame.contentWindow.postMessage('updateContent', '*');
+        } else {
+            console.error("Left iframe not found or not accessible");
+        }
+    } else {
+        leftFrameLoadAttempts++;
+        if (leftFrameLoadAttempts < 10) {  // Try for about 5 seconds
+            setTimeout(notifyLeftFrame, 500);
+        } else {
+            console.error("Left iframe failed to load after multiple attempts");
+        }
+    }
+}
+
+// Reset attempts when the page loads
+window.addEventListener('load', () => {
+    leftFrameLoadAttempts = 0;
+});
