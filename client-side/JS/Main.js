@@ -278,17 +278,20 @@ async function handleResponse(accepted, htmlContent) {
             try {
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
+                    const previousHTML = docSnap.data().currentLeftHTML;
+                    const previousVersion = docSnap.data().currentLeftHTMLVersion || 0;
+
                     const versionsCollectionRef = collection(db, "accounts", user.uid, "leftHTML_versions");
 
-                    // Add new version
+                    // Save the previous version
                     await addDoc(versionsCollectionRef, {
-                        html: htmlContent,
+                        html: previousHTML,
                         timestamp: serverTimestamp()
                     });
 
-                    // Update the main document to point to the latest version
+                    // Update with the new HTML and increment version
                     await updateDoc(userDocRef, {
-                        currentLeftHTMLVersion: docSnap.data().currentLeftHTMLVersion + 1 || 1,
+                        currentLeftHTMLVersion: previousVersion + 1,
                         currentLeftHTML: htmlContent
                     });
 
@@ -309,6 +312,44 @@ async function handleResponse(accepted, htmlContent) {
         console.log("Response denied");
     }
 }
+
+document.getElementById('revertButton').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (user) {
+        const versionsCollectionRef = collection(db, "accounts", user.uid, "leftHTML_versions");
+        const versionsQuery = query(versionsCollectionRef, orderBy('timestamp', 'desc'), limit(1));
+        const versionsSnapshot = await getDocs(versionsQuery);
+
+        if (!versionsSnapshot.empty) {
+            const lastVersionDoc = versionsSnapshot.docs[0];
+            const previousHTML = lastVersionDoc.data().html;
+
+            const userDocRef = doc(db, "accounts", user.uid);
+
+            // Update the main document to point to the previous version
+            await updateDoc(userDocRef, {
+                currentLeftHTML: previousHTML
+            });
+
+            console.log("LeftHTML reverted successfully");
+            
+            // Notify the left iframe to update its content
+            notifyLeftFrame();
+
+            // Recheck if there are more previous versions
+            const newVersionsSnapshot = await getDocs(versionsCollectionRef);
+            if (newVersionsSnapshot.size <= 1) {
+                // Hide the revert button if there's only one or no versions left
+                document.getElementById('revertButton').style.display = 'none';
+            }
+        } else {
+            // Display pop-up if no previous versions found
+            alert("No previous versions available to revert to.");
+        }
+    } else {
+        console.log("No user is signed in.");
+    }
+});
 
 function notifyLeftFrame() {
     if (window.leftFrameLoaded) {
