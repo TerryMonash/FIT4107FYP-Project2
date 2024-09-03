@@ -25,4 +25,4 @@ Dependencies needed to run the project locally:
 To run the back-end / server that connects to the ChatGPT API, please run `cd server-side` in the project terminal.
 Then run `npm install` and `node server.js` to launch the server.
 
-Then simply press the Submit button on the Page.html in the browser along with any query.
+Then simply press the Submit button on the Page.html in the browser along with any query.-*/87988798

@@ -8,6 +8,7 @@ import {
     addDoc,
     setDoc,
     getDoc,
+    deleteDoc,
     updateDoc,
     serverTimestamp,
     query,
@@ -322,6 +323,7 @@ document.getElementById('revertButton').addEventListener('click', async () => {
 
         if (!versionsSnapshot.empty) {
             const lastVersionDoc = versionsSnapshot.docs[0];
+            const lastVersionDocRef = lastVersionDoc.ref;
             const previousHTML = lastVersionDoc.data().html;
 
             const userDocRef = doc(db, "accounts", user.uid);
@@ -331,8 +333,11 @@ document.getElementById('revertButton').addEventListener('click', async () => {
                 currentLeftHTML: previousHTML
             });
 
-            console.log("LeftHTML reverted successfully");
-            
+            // Delete the reverted version from the leftHTML_versions collection
+            await deleteDoc(lastVersionDocRef);
+
+            console.log("LeftHTML reverted and version deleted successfully");
+
             // Notify the left iframe to update its content
             notifyLeftFrame();
 
