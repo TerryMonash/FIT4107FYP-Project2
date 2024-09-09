@@ -328,18 +328,12 @@ document.getElementById('revertButton').addEventListener('click', async () => {
 
             const userDocRef = doc(db, "accounts", user.uid);
 
-            // Update the main document to point to the previous version
-            await updateDoc(userDocRef, {
-                currentLeftHTML: previousHTML
-            });
             try {
                 // Update the main document to point to the previous version
                 await updateDoc(userDocRef, {
                     currentLeftHTML: previousHTML
                 });
 
-            // Delete the reverted version from the leftHTML_versions collection
-            await deleteDoc(lastVersionDocRef);
                 // Decrement the currentLeftHTMLVersion count
                 const userDocSnapshot = await getDoc(userDocRef);
                 if (userDocSnapshot.exists()) {
@@ -356,19 +350,11 @@ document.getElementById('revertButton').addEventListener('click', async () => {
                 // Delete the reverted version from the leftHTML_versions collection
                 await deleteDoc(lastVersionDocRef);
 
-            console.log("LeftHTML reverted and version deleted successfully");
                 console.log("LeftHTML reverted and version deleted successfully");
 
-            // Notify the left iframe to update its content
-            notifyLeftFrame();
                 // Notify the left iframe to update its content
                 notifyLeftFrame();
 
-            // Recheck if there are more previous versions
-            const newVersionsSnapshot = await getDocs(versionsCollectionRef);
-            if (newVersionsSnapshot.size <= 1) {
-                // Hide the revert button if there's only one or no versions left
-                document.getElementById('revertButton').style.display = 'none';
                 // Recheck if there are more previous versions
                 const newVersionsSnapshot = await getDocs(versionsCollectionRef);
                 if (newVersionsSnapshot.size <= 1) {
