@@ -395,3 +395,99 @@ function notifyLeftFrame() {
 window.addEventListener('load', () => {
     leftFrameLoadAttempts = 0;
 });
+
+
+let mediaRecorder;
+let audioChunks = [];
+
+async function transcribe(audioBlob, chatbotInput, loadingElement) {
+    console.log("Starting transcription process", new Date().toISOString());
+    try {
+        loadingElement.style.display = 'block';
+
+        console.log("Sending audio for transcription", new Date().toISOString());
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.wav');
+
+        const response = await fetch('http://localhost:3000/api/transcribe', {
+            method: 'POST',
+            body: formData,
+        });
+
+        console.log('Received response from server', new Date().toISOString());
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`Transcription failed: ${response.status} ${response.statusText}. ${errorText}`);
+            throw new Error(`Transcription failed: ${response.status} ${response.statusText}. ${errorText}`);
+        }
+
+        const result = await response.json();
+        console.log('Transcription result:', result, new Date().toISOString());
+
+        chatbotInput.value = result.text;
+        console.log("Transcription complete and displayed in input", new Date().toISOString());
+    } catch (error) {
+        console.error('Error in transcription:', error, new Date().toISOString());
+        loadingElement.textContent = 'Error: ' + error.message;
+        loadingElement.style.color = 'red';
+    } finally {
+        if (!loadingElement.textContent.includes('Error')) {
+            loadingElement.style.display = 'none';
+        }
+        console.log("Transcription process finished", new Date().toISOString());
+    }
+}
+
+function initializeAudioRecording() {
+    console.log("Initializing audio recording...");
+    const recordButton = document.getElementById('recordButton');
+    const chatbotInput = document.getElementById('chatbotInput');
+    const loadingElement = document.getElementById('loading');
+
+    if (!recordButton || !chatbotInput || !loadingElement) {
+        console.error('Required elements not found');
+        return;
+    }
+
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            console.log("Microphone access granted");
+            recordButton.disabled = false;
+            mediaRecorder = new MediaRecorder(stream);
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                console.log("Recording stopped, processing audio...");
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                audioChunks = [];
+                await transcribe(audioBlob, chatbotInput, loadingElement);
+            };
+
+            recordButton.addEventListener('click', (event) => {
+                event.preventDefault(); // Prevent any default button behavior
+                if (mediaRecorder.state === 'inactive') {
+                    console.log("Starting recording");
+                    audioChunks = [];
+                    mediaRecorder.start();
+                    recordButton.textContent = 'Stop Recording';
+                    recordButton.classList.add('recording');
+                } else {
+                    console.log("Stopping recording");
+                    mediaRecorder.stop();
+                    recordButton.textContent = 'Start Recording';
+                    recordButton.classList.remove('recording');
+                }
+            });
+        })
+        .catch(error => {
+            console.error('Error accessing microphone:', error);
+            recordButton.textContent = 'Microphone access denied';
+        });
+}
+
+// Ensure this function is called when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', initializeAudioRecording);
