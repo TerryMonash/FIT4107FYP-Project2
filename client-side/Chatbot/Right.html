@@ -54,8 +54,14 @@
     <form id="chatbotForm">
         <label for="chatbotInput"> Enter a prompt here: </label>
         <textarea id="chatbotInput"></textarea>
+        
+        <!-- New Image Upload Field -->
+        <label for="imageUpload">Upload an image:</label>
+        <input type="file" id="imageUpload" name="image" accept="image/*">
+        
         <input type="submit" value="Submit">
     </form>
+    
     <button id="recordButton" disabled>Start Recording</button>
     <p>Response:</p>
     <p id="response"></p>
