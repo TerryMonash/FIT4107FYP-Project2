@@ -332,20 +332,51 @@ document.getElementById('revertButton').addEventListener('click', async () => {
             await updateDoc(userDocRef, {
                 currentLeftHTML: previousHTML
             });
+            try {
+                // Update the main document to point to the previous version
+                await updateDoc(userDocRef, {
+                    currentLeftHTML: previousHTML
+                });
 
             // Delete the reverted version from the leftHTML_versions collection
             await deleteDoc(lastVersionDocRef);
+                // Decrement the currentLeftHTMLVersion count
+                const userDocSnapshot = await getDoc(userDocRef);
+                if (userDocSnapshot.exists()) {
+                    const currentVersionCount = userDocSnapshot.data().currentLeftHTMLVersion || 0;
+                    const newVersionCount = currentVersionCount > 0 ? currentVersionCount - 1 : 0;
+                    
+                    // Update the version count in Firestore
+                    await updateDoc(userDocRef, {
+                        currentLeftHTMLVersion: newVersionCount
+                    });
+                    console.log("LeftHTML version count updated to:", newVersionCount);
+                }
+
+                // Delete the reverted version from the leftHTML_versions collection
+                await deleteDoc(lastVersionDocRef);
 
             console.log("LeftHTML reverted and version deleted successfully");
+                console.log("LeftHTML reverted and version deleted successfully");
 
             // Notify the left iframe to update its content
             notifyLeftFrame();
+                // Notify the left iframe to update its content
+                notifyLeftFrame();
 
             // Recheck if there are more previous versions
             const newVersionsSnapshot = await getDocs(versionsCollectionRef);
             if (newVersionsSnapshot.size <= 1) {
                 // Hide the revert button if there's only one or no versions left
                 document.getElementById('revertButton').style.display = 'none';
+                // Recheck if there are more previous versions
+                const newVersionsSnapshot = await getDocs(versionsCollectionRef);
+                if (newVersionsSnapshot.size <= 1) {
+                    // Hide the revert button if there's only one or no versions left
+                    document.getElementById('revertButton').style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error updating or deleting document:", error);
             }
         } else {
             // Display pop-up if no previous versions found
