@@ -8,6 +8,7 @@ import {
     addDoc,
     setDoc,
     getDoc,
+    deleteDoc,
     updateDoc,
     serverTimestamp,
     query,
@@ -278,17 +279,20 @@ async function handleResponse(accepted, htmlContent) {
             try {
                 const docSnap = await getDoc(userDocRef);
                 if (docSnap.exists()) {
+                    const previousHTML = docSnap.data().currentLeftHTML;
+                    const previousVersion = docSnap.data().currentLeftHTMLVersion || 0;
+
                     const versionsCollectionRef = collection(db, "accounts", user.uid, "leftHTML_versions");
 
-                    // Add new version
+                    // Save the previous version
                     await addDoc(versionsCollectionRef, {
-                        html: htmlContent,
+                        html: previousHTML,
                         timestamp: serverTimestamp()
                     });
 
-                    // Update the main document to point to the latest version
+                    // Update with the new HTML and increment version
                     await updateDoc(userDocRef, {
-                        currentLeftHTMLVersion: docSnap.data().currentLeftHTMLVersion + 1 || 1,
+                        currentLeftHTMLVersion: previousVersion + 1,
                         currentLeftHTML: htmlContent
                     });
 
@@ -309,6 +313,65 @@ async function handleResponse(accepted, htmlContent) {
         console.log("Response denied");
     }
 }
+
+document.getElementById('revertButton').addEventListener('click', async () => {
+    const user = auth.currentUser;
+    if (user) {
+        const versionsCollectionRef = collection(db, "accounts", user.uid, "leftHTML_versions");
+        const versionsQuery = query(versionsCollectionRef, orderBy('timestamp', 'desc'), limit(1));
+        const versionsSnapshot = await getDocs(versionsQuery);
+
+        if (!versionsSnapshot.empty) {
+            const lastVersionDoc = versionsSnapshot.docs[0];
+            const lastVersionDocRef = lastVersionDoc.ref;
+            const previousHTML = lastVersionDoc.data().html;
+
+            const userDocRef = doc(db, "accounts", user.uid);
+
+            try {
+                // Update the main document to point to the previous version
+                await updateDoc(userDocRef, {
+                    currentLeftHTML: previousHTML
+                });
+
+                // Decrement the currentLeftHTMLVersion count
+                const userDocSnapshot = await getDoc(userDocRef);
+                if (userDocSnapshot.exists()) {
+                    const currentVersionCount = userDocSnapshot.data().currentLeftHTMLVersion || 0;
+                    const newVersionCount = currentVersionCount > 0 ? currentVersionCount - 1 : 0;
+                    
+                    // Update the version count in Firestore
+                    await updateDoc(userDocRef, {
+                        currentLeftHTMLVersion: newVersionCount
+                    });
+                    console.log("LeftHTML version count updated to:", newVersionCount);
+                }
+
+                // Delete the reverted version from the leftHTML_versions collection
+                await deleteDoc(lastVersionDocRef);
+
+                console.log("LeftHTML reverted and version deleted successfully");
+
+                // Notify the left iframe to update its content
+                notifyLeftFrame();
+
+                // Recheck if there are more previous versions
+                const newVersionsSnapshot = await getDocs(versionsCollectionRef);
+                if (newVersionsSnapshot.size <= 1) {
+                    // Hide the revert button if there's only one or no versions left
+                    document.getElementById('revertButton').style.display = 'none';
+                }
+            } catch (error) {
+                console.error("Error updating or deleting document:", error);
+            }
+        } else {
+            // Display pop-up if no previous versions found
+            alert("No previous versions available to revert to.");
+        }
+    } else {
+        console.log("No user is signed in.");
+    }
+});
 
 function notifyLeftFrame() {
     if (window.leftFrameLoaded) {
