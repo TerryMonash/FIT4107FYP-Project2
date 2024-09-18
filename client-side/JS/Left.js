@@ -58,14 +58,9 @@ window.addEventListener('message', (event) => {
 // Notify the parent window that the frame is loaded
 window.parent.postMessage('leftFrameLoaded', '*');
 
-// Toggle button functionality
 const toggleButton = document.getElementById('toggleRightButton');
-const rightFrame = document.getElementById('rightFrame');
 
 toggleButton.addEventListener('click', () => {
-    if (rightFrame.style.display === 'none' || rightFrame.style.display === '') {
-        rightFrame.style.display = 'block';
-    } else {
-        rightFrame.style.display = 'none';
-    }
+    // Send message to parent page (page.html) to toggle the right frame
+    window.parent.postMessage("toggleRightFrame", "*");
 });

@@ -14,15 +14,18 @@
             flex: 1;         
             border: none;   
         }
+        #rightFrame {
+            flex: 1;
+            border: none;
+            display: none;  /* Hidden by default */
+        }
     </style>
 </head>
 <body>
-    <iframe src="Left.html" id="leftFrame" name="leftFram" onload="frameLoaded()"></iframe>
-    <iframe src="Right.html" id="rightFrame"></iframe>
+    <iframe src="Left.html" id="leftFrame" name="leftFrame" onload="frameLoaded()"></iframe>
+    <iframe src="Right.html" id="rightFrame" name="rightFrame"></iframe>
+
+    <script src="page.js"></script>
 </body>
-<script>
-    function frameLoaded() {
-        window.leftFrameloaded = true;
-    }
-</script>
+<script defer type="module" src="../JS/Page.js"></script>
 </html>
