@@ -6,26 +6,61 @@
     <title>Adaptive UI Page Example</title>
     <style>
         body {
-            display: flex;   
-            margin: 0;       
-            height: 100vh;   
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+            height: 100vh;
         }
+
+        .navbar {
+            width: 100%;
+            background-color: #333;
+            padding: 10px;
+            display: flex;
+            justify-content: flex-start;
+        }
+
+        .navbar button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .navbar button:hover {
+            background-color: #45a049;
+        }
+
+        .iframe-container {
+            display: flex;
+            flex: 1;
+        }
+
         iframe {
-            flex: 1;         
-            border: none;   
-        }
-        #rightFrame {
             flex: 1;
             border: none;
-            display: none; /* Set to none to initially hide right side */
+        }
+
+        #rightFrame.hidden {
+            display: none;
         }
     </style>
 </head>
 <body>
-    <iframe src="Left.html" id="leftFrame" name="leftFrame" onload="frameLoaded()"></iframe>
-    <iframe src="Right.html" id="rightFrame" name="rightFrame"></iframe>
 
-    <script src="page.js"></script>
+    <!-- Navigation Bar -->
+    <div class="navbar">
+        <button id="toggleRightBtn">Hide Right Side</button>
+    </div>
+
+    <!-- Iframes Container -->
+    <div class="iframe-container">
+        <iframe src="Left.html" id="leftFrame" name="leftFrame"></iframe>
+        <iframe src="Right.html" id="rightFrame" name="rightFrame"></iframe>
+    </div>
+
+    <script defer type="module" src="../JS/Page.js"></script>
+
 </body>
-<script defer type="module" src="../JS/Page.js"></script>
 </html>

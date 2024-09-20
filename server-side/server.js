@@ -53,7 +53,7 @@ app.post('/api/chatCompletion', async (req, res) => {
                 'Authorization': `Bearer ${process.env['OPENAI_API_KEY']}`
             },
             body: JSON.stringify({
-                model: "gpt-4o-2024-08-06 ",
+                model: "gpt-4o-2024-08-06",
                 messages: [
                     {
                         role: "system",
