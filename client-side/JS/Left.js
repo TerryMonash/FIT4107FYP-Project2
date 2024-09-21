@@ -47,13 +47,3 @@ onAuthStateChanged(auth, (user) => {
         console.log("No user is signed in.");
     }
 });
-
-// Listen for messages from the parent window
-window.addEventListener('message', (event) => {
-    if (event.data === 'updateContent') {
-        updateContent();
-    }
-}, false);
-
-// Notify the parent window that the frame is loaded
-window.parent.postMessage('leftFrameLoaded', '*');

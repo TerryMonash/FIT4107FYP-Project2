@@ -94,6 +94,7 @@ const htmlData = (
         </p>
         <div class="square-box"></div>
     </body>
+    <script defer type="module" src="../JS/Left.js"></script>
     </html>
 `
 )
