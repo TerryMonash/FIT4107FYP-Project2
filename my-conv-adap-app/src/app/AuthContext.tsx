@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { auth } from "./firebaseConfig"; // Assuming you're using Firebase for authentication
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { signInWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 interface User {
   uid: string;
@@ -13,7 +14,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
-  // Add any other auth-related functions you need
+  router: ReturnType<typeof useRouter>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -31,14 +32,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser({
           uid: user.uid,
           email: user.email,
-          // Set any other user properties you need
         });
       } else {
         setUser(null);
@@ -64,16 +65,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     await signIn(email, password);
   };
 
-  const adjustedValue: AuthContextType = {
+  const value: AuthContextType = {
     user,
     loading,
     signIn: wrappedSignIn,
     signOut,
+    router,
   };
 
   return (
-    <AuthContext.Provider value={adjustedValue}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
 };

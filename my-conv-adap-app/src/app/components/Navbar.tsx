@@ -1,7 +1,20 @@
 import Link from "next/link";
+import { useAuth } from "../AuthContext";
 import styles from "./Navbar.module.css";
 
 const Navbar = () => {
+  const { signOut } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      // Redirect to the login page after successful logout
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
+
   return (
     <nav className={styles.navbar}>
       <div className={styles.logo}>My App</div>
@@ -13,7 +26,9 @@ const Navbar = () => {
           <Link href="/about">About</Link>
         </li>
         <li>
-          <Link href="/">Logout</Link>
+          <button onClick={handleLogout} className={styles.logoutButton}>
+            Logout
+          </button>
         </li>
       </ul>
     </nav>
