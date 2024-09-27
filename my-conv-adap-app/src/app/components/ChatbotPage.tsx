@@ -33,7 +33,7 @@ import {
 interface ChatbotPageProps {
   onClose: () => void;
   currentPage: "dashboard" | "about";
-  onContentUpdate: () => void;
+  onContentUpdate: (page: "dashboard" | "about", newVersion: number) => void;
 }
 
 const ChatbotPage: React.FC<ChatbotPageProps> = ({
@@ -196,10 +196,6 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
       try {
         const docSnap = await getDoc(userDocRef);
         if (docSnap.exists()) {
-          const previousContent =
-            currentPage === "dashboard"
-              ? docSnap.data().dashboardContent
-              : docSnap.data().aboutContent;
           const previousVersion =
             currentPage === "dashboard"
               ? docSnap.data().currentDashboardVersion
@@ -212,11 +208,12 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
             `${currentPage}_versions`
           );
 
-          // Save the previous version
+          // Save the new version with the prompt
           await addDoc(versionsCollectionRef, {
-            content: previousContent,
+            content: result,
             timestamp: serverTimestamp(),
-            version: previousVersion,
+            version: previousVersion + 1,
+            prompt: input, // Add the prompt here
           });
 
           // Update with the new content and increment version
@@ -234,7 +231,7 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
           await updateDoc(userDocRef, updateData);
 
           console.log(`${currentPage} content updated successfully`);
-          onContentUpdate();
+          onContentUpdate(currentPage, previousVersion + 1);
           // Close the chatbot modal
           onClose();
         } else {

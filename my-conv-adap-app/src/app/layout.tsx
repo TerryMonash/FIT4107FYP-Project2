@@ -11,13 +11,23 @@ const RootContent = ({ children }: { children: React.ReactNode }) => {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [contentVersion, setContentVersion] = useState(1);
+  const [currentDashboardVersion, setCurrentDashboardVersion] = useState(1);
+  const [currentAboutVersion, setCurrentAboutVersion] = useState(1);
 
   const showNavbar =
     pathname !== "/" && pathname !== "/login" && pathname !== "/register";
 
-  const handleContentUpdate = useCallback(() => {
-    setContentVersion((prev) => prev + 1);
-  }, []);
+  const handleContentUpdate = useCallback(
+    (page: "dashboard" | "about", newVersion: number) => {
+      setContentVersion((prev) => prev + 1);
+      if (page === "dashboard") {
+        setCurrentDashboardVersion(newVersion);
+      } else {
+        setCurrentAboutVersion(newVersion);
+      }
+    },
+    []
+  );
 
   useEffect(() => {
     if (!loading) {
@@ -41,7 +51,8 @@ const RootContent = ({ children }: { children: React.ReactNode }) => {
         <FloatingChatIcon
           currentPage={pathname === "/about" ? "about" : "dashboard"}
           onContentUpdate={handleContentUpdate}
-          currentVersion={contentVersion}
+          currentDashboardVersion={currentDashboardVersion}
+          currentAboutVersion={currentAboutVersion}
         />
       )}
     </>

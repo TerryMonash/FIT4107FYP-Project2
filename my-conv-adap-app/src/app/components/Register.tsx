@@ -252,6 +252,7 @@ const Register = () => {
         timestamp: serverTimestamp(),
         version: 1,
         isInitial: true,
+        deleted: false,
       });
 
       // Store initial About content
@@ -266,6 +267,7 @@ const Register = () => {
         timestamp: serverTimestamp(),
         version: 1,
         isInitial: true,
+        deleted: false,
       });
 
       console.log("User registered successfully");

@@ -1,37 +1,32 @@
 import React, { useState } from "react";
 import { IconButton, CircularProgress } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
-import UndoIcon from "@mui/icons-material/Undo";
+import HistoryIcon from "@mui/icons-material/History";
 import ChatbotPage from "./ChatbotPage";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
-import {
-  doc,
-  getDoc,
-  updateDoc,
-  collection,
-  query,
-  where,
-  limit,
-  getDocs,
-} from "firebase/firestore";
+import { collection, query, orderBy, getDocs } from "firebase/firestore";
+import AdaptationsModal from "./AdaptationsModal";
 
 type FloatingChatIconProps = {
   currentPage: "about" | "dashboard";
-  onContentUpdate: () => void;
-  currentVersion: number;
+  onContentUpdate: (page: "about" | "dashboard", newVersion: number) => void;
+  currentDashboardVersion: number;
+  currentAboutVersion: number;
 };
 
+type Adaptation = { id: string };
 const FloatingChatIcon: React.FC<FloatingChatIconProps> = ({
   currentPage,
   onContentUpdate,
-  currentVersion,
+  currentDashboardVersion,
+  currentAboutVersion,
 }) => {
   const [isChatbotOpen, setIsChatbotOpen] = useState(false);
-  const [isReverting, setIsReverting] = useState(false);
+  const [isAdaptationsModalOpen, setIsAdaptationsModalOpen] = useState(false);
+  const [adaptations, setAdaptations] = useState<Adaptation[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useAuth();
-
-  // Remove the useEffect hook that checks for canRevert
 
   const handleChatIconClick = () => {
     setIsChatbotOpen(true);
@@ -41,88 +36,45 @@ const FloatingChatIcon: React.FC<FloatingChatIconProps> = ({
     setIsChatbotOpen(false);
   };
 
-  const handleRevert = async () => {
+  const handleOpenAdaptationsModal = async () => {
     if (!user) {
       console.log("User is not authenticated");
-      // TODO: Show a user-friendly message about authentication
       return;
     }
 
-    setIsReverting(true);
-
-    const accountRef = doc(db, "accounts", user.uid);
-    const accountSnap = await getDoc(accountRef);
-
-    if (!accountSnap.exists()) {
-      console.log("Account document does not exist");
-      // TODO: Show a user-friendly message about missing account
-      setIsReverting(false);
-      return;
-    }
-
-    const accountData = accountSnap.data();
-    const currentVersion =
-      currentPage === "about"
-        ? accountData.currentAboutVersion
-        : accountData.currentDashboardVersion;
-
-    if (currentVersion <= 1) {
-      console.log("Current version is 1 or less, cannot revert");
-      // TODO: Show a user-friendly message that revert is not possible
-      setIsReverting(false);
-      return;
-    }
-
-    const versionsCollectionName =
-      currentPage === "about" ? "about_versions" : "dashboard_versions";
-
-    // Fetch the previous version
-    const versionsCollectionRef = collection(
-      db,
-      "accounts",
-      user.uid,
-      versionsCollectionName
-    );
-    const previousVersionQuery = query(
-      versionsCollectionRef,
-      where("version", "==", currentVersion - 1),
-      limit(1)
-    );
-    const previousVersionSnapshot = await getDocs(previousVersionQuery);
-
-    if (previousVersionSnapshot.empty) {
-      console.error("Previous version not found");
-      // TODO: Show a user-friendly error message about no available versions
-      setIsReverting(false);
-      return;
-    }
-
-    const previousVersionDoc = previousVersionSnapshot.docs[0];
-    const previousVersionData = previousVersionDoc.data();
-
-    const updateData =
-      currentPage === "about"
-        ? {
-            aboutContent: previousVersionData.content,
-            currentAboutVersion: previousVersionData.version,
-          }
-        : {
-            dashboardContent: previousVersionData.content,
-            currentDashboardVersion: previousVersionData.version,
-          };
+    setIsLoading(true);
 
     try {
-      await updateDoc(accountRef, updateData);
-      console.log("Account reverted successfully");
+      const versionsCollectionName =
+        currentPage === "about" ? "about_versions" : "dashboard_versions";
+      const versionsCollectionRef = collection(
+        db,
+        "accounts",
+        user.uid,
+        versionsCollectionName
+      );
+      const versionsQuery = query(
+        versionsCollectionRef,
+        orderBy("version", "desc")
+      );
+      const versionsSnapshot = await getDocs(versionsQuery);
 
-      // Call the onContentUpdate callback instead of directly fetching content
-      onContentUpdate();
+      const adaptationsData = versionsSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      setAdaptations(adaptationsData);
+      setIsAdaptationsModalOpen(true);
     } catch (error) {
-      console.error("Error reverting account:", error);
-      // TODO: Show an error message to the user
+      console.error("Error fetching adaptations:", error);
     } finally {
-      setIsReverting(false);
+      setIsLoading(false);
     }
+  };
+
+  const handleCloseAdaptationsModal = () => {
+    setIsAdaptationsModalOpen(false);
   };
 
   return (
@@ -146,10 +98,12 @@ const FloatingChatIcon: React.FC<FloatingChatIconProps> = ({
       >
         <ChatIcon />
       </IconButton>
-      {currentVersion > 1 && (
+      {(currentPage === "about"
+        ? currentAboutVersion
+        : currentDashboardVersion) > 1 && (
         <IconButton
-          onClick={handleRevert}
-          disabled={isReverting}
+          onClick={handleOpenAdaptationsModal}
+          disabled={isLoading}
           sx={{
             position: "fixed",
             bottom: 16,
@@ -165,10 +119,10 @@ const FloatingChatIcon: React.FC<FloatingChatIconProps> = ({
             boxShadow: 3,
           }}
         >
-          {isReverting ? (
+          {isLoading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            <UndoIcon />
+            <HistoryIcon />
           )}
         </IconButton>
       )}
@@ -177,6 +131,16 @@ const FloatingChatIcon: React.FC<FloatingChatIconProps> = ({
           onClose={handleCloseChatbot}
           currentPage={currentPage}
           onContentUpdate={onContentUpdate}
+        />
+      )}
+      {isAdaptationsModalOpen && (
+        <AdaptationsModal
+          adaptations={adaptations}
+          onClose={handleCloseAdaptationsModal}
+          currentPage={currentPage}
+          onContentUpdate={onContentUpdate}
+          currentAboutVersion={currentAboutVersion}
+          currentDashboardVersion={currentDashboardVersion}
         />
       )}
     </>

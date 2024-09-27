@@ -53,7 +53,7 @@ app.post('/api/chatCompletion', async (req, res) => {
             },
             {
                 role: "system",
-                content: "Guidelines for your responses:\n1. Only output the modified HTML code.\n2. Include the entire HTML document in your response, not just the changed parts.\n3. Do not include any explanations or comments outside the HTML code.\n4. Ensure your changes are syntactically correct and maintain the overall structure of the HTML."
+                content: "Guidelines for your responses:\n1. Only output the modified HTML code.\n2. Include the entire HTML document in your response, not just the changed parts.\n3. Do not include any explanations or comments outside the HTML code.\n4. Ensure your changes are syntactically correct and maintain the overall structure of the HTML.\n5. Do not include markdown syntax like ```html at the beginning or end of your response.\n6. Start your response directly with the <!DOCTYPE html> declaration."
             },
             {
                 role: "system",
