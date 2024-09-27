@@ -1,0 +1,23 @@
+.modal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chatbotPage {
+    width: 85%;
+    height: 85%;
+    max-width: 1200px;
+    max-height: 800px;
+    padding: 32px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.resultSection {
+    flex-grow: 1;
+    overflow-y: auto;
+    padding: 16px;
+    margin-top: 16px;
+}

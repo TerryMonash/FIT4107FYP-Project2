@@ -1,0 +1,36 @@
+.aboutContainer {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+  
+.title {
+font-size: 2.5rem;
+color: #333;
+margin-bottom: 1rem;
+}
+
+.subtitle {
+font-size: 1.8rem;
+color: #444;
+margin-top: 2rem;
+margin-bottom: 1rem;
+}
+
+.description {
+font-size: 1.1rem;
+line-height: 1.6;
+color: #666;
+margin-bottom: 1rem;
+}
+
+.teamList {
+list-style-type: none;
+padding: 0;
+}
+
+.teamList li {
+font-size: 1.1rem;
+color: #555;
+margin-bottom: 0.5rem;
+}
