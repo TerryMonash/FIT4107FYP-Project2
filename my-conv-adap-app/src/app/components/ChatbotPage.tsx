@@ -56,6 +56,8 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const [openRejectDialog, setOpenRejectDialog] = useState(false);
 
+  const [lastPrompt, setLastPrompt] = useState("");
+
   useEffect(() => {
     const fetchPageContent = async () => {
       if (user) {
@@ -86,6 +88,7 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const handleSubmit = async () => {
     setIsLoading(true);
+    setLastPrompt(input); // Store the current input before clearing it
     try {
       const response = await fetch("http://localhost:3001/api/chatCompletion", {
         method: "POST",
@@ -213,7 +216,7 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
             content: result,
             timestamp: serverTimestamp(),
             version: previousVersion + 1,
-            prompt: input, // Add the prompt here
+            prompt: lastPrompt, // Use lastPrompt instead of input
           });
 
           // Update with the new content and increment version

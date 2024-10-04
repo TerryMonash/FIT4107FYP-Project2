@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { IconButton, CircularProgress } from "@mui/material";
 import ChatIcon from "@mui/icons-material/Chat";
-import HistoryIcon from "@mui/icons-material/History";
+import UndoIcon from "@mui/icons-material/Undo";
 import ChatbotPage from "./ChatbotPage";
 import { useAuth } from "../AuthContext";
 import { db } from "../firebaseConfig";
@@ -122,7 +122,7 @@ const FloatingChatIcon: React.FC<FloatingChatIconProps> = ({
           {isLoading ? (
             <CircularProgress size={24} color="inherit" />
           ) : (
-            <HistoryIcon />
+            <UndoIcon />
           )}
         </IconButton>
       )}
