@@ -8,7 +8,7 @@ const path = require('path');
 const fs = require('fs');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 app.use(cors(
     {
@@ -44,7 +44,28 @@ const upload = multer({ storage: storage });
 
 app.post('/api/chatCompletion', async (req, res) => {
     try {
-        const { message, currentHTML } = req.body;
+        const { message, currentHTML, currentPage } = req.body;
+
+        const systemMessages = [
+            {
+                role: "system",
+                content: `You are an AI assistant integrated into a web application. Your role is to help users modify the content of their ${currentPage} page. You will receive the current HTML content and a user's request for changes. Your task is to update the HTML according to the user's instructions.`
+            },
+            {
+                role: "system",
+                content: "Guidelines for your responses:\n1. Only output the modified HTML code.\n2. Include the entire HTML document in your response, not just the changed parts.\n3. Do not include any explanations or comments outside the HTML code.\n4. Ensure your changes are syntactically correct and maintain the overall structure of the HTML.\n5. Do not include markdown syntax like ```html at the beginning or end of your response.\n6. Start your response directly with the <!DOCTYPE html> declaration."
+            },
+            {
+                role: "system",
+                content: "The changes you make will be reflected in real-time on the user's webpage. Accuracy and attention to detail are crucial."
+            }
+        ];
+
+        const userMessage = {
+            role: "user",
+            content: `Current HTML for ${currentPage} page:\n\n${currentHTML}\n\nUser request: ${message}\n\nPlease modify the HTML based on this request. Return the entire updated HTML document, incorporating the requested changes while maintaining the overall structure and functionality of the page.`
+        };
+
 
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
@@ -54,25 +75,14 @@ app.post('/api/chatCompletion', async (req, res) => {
             },
             body: JSON.stringify({
                 model: "gpt-4o-2024-08-06",
-                messages: [
-                    {
-                        role: "system",
-                        content: "You are a chatbot on the Right Hand Side of a website that listens to various adaptations/changes that a user wants to do on the Left Hand Side of the website. You will be provided with some HTML code and you are required to output the same HTML code with the appropriate changes that will be added to the Left Hand Side."
-                    },
-                    {
-                        role: "system",
-                        content: "It is VERY important that you ONLY give the provided HTML code with the changes as your response as your response will directly be added to the Left Hand Side of the website. DO NOT output anything but that. You are to provide the entire code given to you with the requested changes and not just the changes by themselves."
-                    },
-                    {
-                        role: "system",
-                        content: "The code you provide will be shown to the user on the right hand side of the website in contrast to the left hand side being normal. Which is why it is VERY important to return the entire code WITH the requested changes and NOT just the required changes"
-                    },
-                    {
-                        role: "user",
-                        content: `Current HTML:\n${currentHTML}\n\nUser request: ${message}\n\nPlease modify the HTML based on the user's request and return the entire updated HTML document.`
-                    }
-                ],
-                temperature: 0.3
+                messages: [...systemMessages, userMessage],
+                temperature: 0.2, // Lowered for more consistent outputs
+                // Controls diversity of generated text (0.95 means consider top 95% of probability mass)
+                top_p: 0.95,
+                // Reduces repetition of similar phrases (-2.0 to 2.0, higher values decrease likelihood of repetition)
+                frequency_penalty: 0.5,
+                // Encourages model to talk about new topics (-2.0 to 2.0, higher values increase likelihood of new topics)
+                presence_penalty: 0.5,
             })
         });
 

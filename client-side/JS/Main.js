@@ -119,6 +119,42 @@ if (document.getElementById('login-submit') != null) {
                 const errorCode = error.code;
                 const errorMessage = error.message;
                 console.log(errorMessage);
+                // Create an error message element if it doesn't exist
+                let errorMessageElement = document.getElementById('login-error-message');
+                if (!errorMessageElement) {
+                    errorMessageElement = document.createElement('div');
+                    errorMessageElement.id = 'login-error-message';
+                    errorMessageElement.style.color = 'red';
+                    errorMessageElement.style.marginTop = '10px';
+                    loginSubmit.parentNode.insertBefore(errorMessageElement, loginSubmit.nextSibling);
+                }
+
+                // Handle different error codes
+                switch (errorCode) {
+                    case 'auth/invalid-email':
+                        errorMessageElement.textContent = 'Invalid email address. Please check and try again.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorMessageElement.textContent = 'This account has been disabled. Please contact support.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorMessageElement.textContent = 'No account found with this email. Please check or register.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMessageElement.textContent = 'Incorrect password. Please try again.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMessageElement.textContent = 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorMessageElement.textContent = 'An error occurred. Please try again later.';
+                }
+
+                // Log the error for debugging
+                console.error('Login error:', errorCode, errorMessage);
+
+                // Clear the password field for security
+                document.getElementById('login-password').value = '';
                 // ..
             });
     });
@@ -340,7 +376,7 @@ document.getElementById('revertButton').addEventListener('click', async () => {
                 if (userDocSnapshot.exists()) {
                     const currentVersionCount = userDocSnapshot.data().currentLeftHTMLVersion || 0;
                     const newVersionCount = currentVersionCount > 0 ? currentVersionCount - 1 : 0;
-                    
+
                     // Update the version count in Firestore
                     await updateDoc(userDocRef, {
                         currentLeftHTMLVersion: newVersionCount
