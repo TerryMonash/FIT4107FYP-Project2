@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Right Section</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: flex-start;
+            padding: 20px;
+            background-color: #e9ecef;
+        }
+        form {
+            display: flex;
+            flex-direction: column;
+            width: 520px;
+        }
+        textarea {
+            width: 500px;
+            height: 200px;
+        }
+        .loading {
+            display: none;
+            font-size: 18px;
+            color: #666;
+        }
+        #recordButton {
+            background-color: #4CAF50;
+            border: none;
+            color: white;
+            padding: 15px 32px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            cursor: pointer;
+        }
+        #recordButton.recording {
+            background-color: #f44336;
+        }
+        #recordButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <h1>Right Section (For chatbot/adaptive UI implementation)</h1>
+    <p>This is the right side of the page where the chat GPT/adaptive UI user input section will be implemented</p>
+    <form id="chatbotForm">
+        <label for="chatbotInput"> Enter a prompt here: </label>
+        <textarea id="chatbotInput"></textarea>
+        <input type="submit" value="Submit">
+    </form>
+    <button id="recordButton" disabled>Start Recording</button>
+    <p>Response:</p>
+    <p id="response"></p>
+    <p class="loading" id="loading">Loading...</p>
+</body>
+<button id="revertButton">Undo Change</button>
+<script defer type="module" src="../JS/Main.js"></script>
+</html>

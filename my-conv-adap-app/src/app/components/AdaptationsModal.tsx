@@ -8,6 +8,7 @@ import {
   AccordionSummary,
   AccordionDetails,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useAuth } from "../AuthContext";
@@ -42,6 +43,7 @@ const AdaptationsModal: React.FC<AdaptationsModalProps> = ({
   const [expandedAccordion, setExpandedAccordion] = useState<string | false>(
     false
   );
+  const [isReverting, setIsReverting] = useState(false);
   const { user } = useAuth();
 
   const handleAccordionChange =
@@ -52,9 +54,12 @@ const AdaptationsModal: React.FC<AdaptationsModalProps> = ({
   const handleRevert = async (version: number) => {
     if (!user) return;
 
+    setIsReverting(true);
+
     const adaptationToRevert = adaptations.find((a) => a.version === version);
     if (!adaptationToRevert) {
       console.error(`Adaptation with version ${version} not found`);
+      setIsReverting(false);
       return;
     }
 
@@ -67,10 +72,8 @@ const AdaptationsModal: React.FC<AdaptationsModalProps> = ({
     );
 
     try {
-      // Start a batch write
       const batch = writeBatch(db);
 
-      // Update the account document
       const updateData =
         currentPage === "about"
           ? {
@@ -83,7 +86,6 @@ const AdaptationsModal: React.FC<AdaptationsModalProps> = ({
             };
       batch.update(accountRef, updateData);
 
-      // Mark adaptations with higher versions as deleted
       const snapshot = await getDocs(
         query(versionsCollectionRef, where("version", ">", version))
       );
@@ -91,18 +93,17 @@ const AdaptationsModal: React.FC<AdaptationsModalProps> = ({
         batch.update(doc.ref, { deleted: true });
       });
 
-      // Commit the batch
       await batch.commit();
 
-      // Update local state
       onContentUpdate(currentPage, version);
       onClose();
 
-      // Update local adaptations state
       const newAdaptations = adaptations.filter((a) => a.version <= version);
       setAdaptations(newAdaptations);
     } catch (error) {
       console.error("Error reverting to version:", error);
+    } finally {
+      setIsReverting(false);
     }
   };
 
@@ -163,8 +164,13 @@ const AdaptationsModal: React.FC<AdaptationsModalProps> = ({
                 <Button
                   variant="contained"
                   onClick={() => handleRevert(adaptation.version)}
+                  disabled={isReverting}
                 >
-                  Revert to this version
+                  {isReverting ? (
+                    <CircularProgress size={24} />
+                  ) : (
+                    "Revert to this version"
+                  )}
                 </Button>
               )}
             </AccordionDetails>

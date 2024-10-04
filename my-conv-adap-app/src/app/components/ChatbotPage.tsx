@@ -194,57 +194,63 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
   };
 
   const handleAccept = async () => {
-    if (user) {
-      const userDocRef = doc(db, "accounts", user.uid);
-      try {
-        const docSnap = await getDoc(userDocRef);
-        if (docSnap.exists()) {
-          const previousVersion =
-            currentPage === "dashboard"
-              ? docSnap.data().currentDashboardVersion
-              : docSnap.data().currentAboutVersion;
-
-          const versionsCollectionRef = collection(
-            db,
-            "accounts",
-            user.uid,
-            `${currentPage}_versions`
-          );
-
-          // Save the new version with the prompt
-          await addDoc(versionsCollectionRef, {
-            content: result,
-            timestamp: serverTimestamp(),
-            version: previousVersion + 1,
-            prompt: lastPrompt, // Use lastPrompt instead of input
-          });
-
-          // Update with the new content and increment version
-          const updateData =
-            currentPage === "dashboard"
-              ? {
-                  dashboardContent: result,
-                  currentDashboardVersion: previousVersion + 1,
-                }
-              : {
-                  aboutContent: result,
-                  currentAboutVersion: previousVersion + 1,
-                };
-
-          await updateDoc(userDocRef, updateData);
-
-          console.log(`${currentPage} content updated successfully`);
-          onContentUpdate(currentPage, previousVersion + 1);
-          // Close the chatbot modal
-          onClose();
-        } else {
-          console.log("No such document!");
-        }
-      } catch (error) {
-        console.error("Error updating document: ", error);
-      }
-    } else {
+    if (!user) {
       console.log("No user is signed in.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const userDocRef = doc(db, "accounts", user.uid);
+      const docSnap = await getDoc(userDocRef);
+
+      if (!docSnap.exists()) {
+        console.log("No such document!");
+        return;
+      }
+
+      const previousVersion =
+        currentPage === "dashboard"
+          ? docSnap.data().currentDashboardVersion
+          : docSnap.data().currentAboutVersion;
+
+      const versionsCollectionRef = collection(
+        db,
+        "accounts",
+        user.uid,
+        `${currentPage}_versions`
+      );
+
+      // Save the new version with the prompt
+      await addDoc(versionsCollectionRef, {
+        content: result,
+        timestamp: serverTimestamp(),
+        version: previousVersion + 1,
+        prompt: lastPrompt, // Use lastPrompt instead of input
+      });
+
+      // Update with the new content and increment version
+      const updateData =
+        currentPage === "dashboard"
+          ? {
+              dashboardContent: result,
+              currentDashboardVersion: previousVersion + 1,
+            }
+          : {
+              aboutContent: result,
+              currentAboutVersion: previousVersion + 1,
+            };
+
+      await updateDoc(userDocRef, updateData);
+
+      console.log(`${currentPage} content updated successfully`);
+      onContentUpdate(currentPage, previousVersion + 1);
+      // Close the chatbot modal
+      onClose();
+    } catch (error) {
+      console.error("Error updating document: ", error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -353,13 +359,19 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
         </Paper>
         {result && (
           <Box mt={2} display="flex" justifyContent="center" gap={2}>
-            <Button variant="contained" color="primary" onClick={handleAccept}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleAccept}
+              disabled={isLoading}
+            >
               Accept Changes
             </Button>
             <Button
               variant="contained"
               color="secondary"
               onClick={handleReject}
+              disabled={isLoading}
             >
               Reject Changes
             </Button>
