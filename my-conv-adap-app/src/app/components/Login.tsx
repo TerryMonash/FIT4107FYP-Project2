@@ -20,7 +20,7 @@ const Login = () => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       console.log("Logging in user");
-      router.push("/dashboard"); // Adjust this to match your APP_PAGE route
+      router.push("/dashboard");
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error("Login error:", error.message);
@@ -28,7 +28,6 @@ const Login = () => {
         console.error("Login error:", String(error));
       }
 
-      // Handle different error codes
       if (error instanceof Error && "code" in error) {
         switch (error.code) {
           case "auth/invalid-email":
@@ -36,6 +35,11 @@ const Login = () => {
             break;
           case "auth/user-disabled":
             setError("This account has been disabled. Please contact support.");
+            break;
+          case "auth/invalid-credential":
+            setError(
+              "Invalid credentials. Please check your email and password."
+            );
             break;
           case "auth/user-not-found":
             setError(
@@ -55,7 +59,6 @@ const Login = () => {
         setError("An unknown error occurred.");
       }
 
-      // Clear the password field for security
       setPassword("");
     }
   };

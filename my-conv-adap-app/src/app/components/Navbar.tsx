@@ -8,7 +8,6 @@ const Navbar = () => {
   const handleLogout = async () => {
     try {
       await signOut();
-      // Redirect to the login page after successful logout
       window.location.href = "/login";
     } catch (error) {
       console.error("Error signing out:", error);

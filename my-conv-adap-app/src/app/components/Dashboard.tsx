@@ -7,7 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import styles from "../Home.module.css";
 
 const Dashboard: React.FC = () => {
-  const [content, setContent] = useState<string>(""); // Added logging
+  const [content, setContent] = useState<string>("");
   const { user } = useAuth();
 
   const fetchDashboardContent = useCallback(async () => {
@@ -19,10 +19,10 @@ const Dashboard: React.FC = () => {
         const accountData = accountSnap.data();
         setContent(accountData.dashboardContent);
       } else {
-        console.log("No account data found"); // Added logging
+        console.log("No account data found");
       }
     } else {
-      console.log("No user logged in"); // Added logging
+      console.log("No user logged in");
     }
   }, [user]);
 

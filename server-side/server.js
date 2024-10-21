@@ -10,6 +10,7 @@ const fs = require('fs');
 const app = express();
 const PORT = process.env.PORT || 3001;
 
+// Configure CORS middleware
 app.use(cors(
     {
         "origin": "*",
@@ -20,17 +21,19 @@ app.use(cors(
 )
 );
 
+// Parse JSON bodies
 app.use(express.json());
 
+// Initialize OpenAI client
 const openai = new OpenAI(process.env.OPENAI_API_KEY);
 
-// Create uploads directory if it doesn't exist
+// Set up uploads directory
 const uploadsDir = path.join(__dirname, 'uploads');
 if (!fs.existsSync(uploadsDir)) {
     fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
-// Configure multer for handling file uploads
+// Configure multer for file uploads
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, uploadsDir)
@@ -42,6 +45,16 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage: storage });
 
+/**
+ * Handle chat completion requests
+ * 
+ * @route POST /api/chatCompletion
+ * @param {Object} req.body - The request body
+ * @param {string} req.body.message - The user's message
+ * @param {string} req.body.currentHTML - The current HTML content
+ * @param {string} req.body.currentPage - The current page name
+ * @returns {Object} The chat completion response
+ */
 app.post('/api/chatCompletion', async (req, res) => {
     try {
         const { message, currentHTML, currentPage } = req.body;
@@ -66,7 +79,7 @@ app.post('/api/chatCompletion', async (req, res) => {
             content: `Current HTML for ${currentPage} page:\n\n${currentHTML}\n\nUser request: ${message}\n\nPlease modify the HTML based on this request. Return the entire updated HTML document, incorporating the requested changes while maintaining the overall structure and functionality of the page.`
         };
 
-
+        // Make API call to OpenAI
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -77,12 +90,9 @@ app.post('/api/chatCompletion', async (req, res) => {
                 model: "gpt-4o-2024-08-06",
                 messages: [...systemMessages, userMessage],
                 temperature: 0.2, // Lowered for more consistent outputs
-                // Controls diversity of generated text (0.95 means consider top 95% of probability mass)
-                top_p: 0.95,
-                // Reduces repetition of similar phrases (-2.0 to 2.0, higher values decrease likelihood of repetition)
-                frequency_penalty: 0.5,
-                // Encourages model to talk about new topics (-2.0 to 2.0, higher values increase likelihood of new topics)
-                presence_penalty: 0.5,
+                top_p: 0.95, // Controls diversity of generated text (0.95 means consider top 95% of probability mass)
+                frequency_penalty: 0.5, // Reduces repetition of similar phrases (-2.0 to 2.0, higher values decrease likelihood of repetition)
+                presence_penalty: 0.5, // Encourages model to talk about new topics (-2.0 to 2.0, higher values increase likelihood of new topics)
             })
         });
 
@@ -100,6 +110,13 @@ app.post('/api/chatCompletion', async (req, res) => {
     }
 });
 
+/**
+ * Handle audio transcription requests
+ * 
+ * @route POST /api/transcribe
+ * @param {Object} req.file - The uploaded audio file
+ * @returns {Object} The transcription result
+ */
 app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     console.log('Received transcription request', new Date().toISOString());
     try {
@@ -120,7 +137,7 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
 
         console.log('Transcription completed:', transcription, new Date().toISOString());
 
-        // Clean up: delete the file after transcription
+        // Clean up: remove the uploaded file after transcription
         fs.unlinkSync(filePath);
 
         console.log('Sending response to client', new Date().toISOString());
@@ -131,6 +148,7 @@ app.post('/api/transcribe', upload.single('audio'), async (req, res) => {
     }
 });
 
+// Start the server
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });

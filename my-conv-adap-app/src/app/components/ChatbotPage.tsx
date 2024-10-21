@@ -88,7 +88,7 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
   const handleSubmit = async () => {
     setIsLoading(true);
-    setLastPrompt(input); // Store the current input before clearing it
+    setLastPrompt(input);
     try {
       const response = await fetch("http://localhost:3001/api/chatCompletion", {
         method: "POST",
@@ -186,7 +186,6 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
       setInput(result.text);
     } catch (error) {
       console.error("Error in transcription:", error);
-      // You might want to show an error message to the user here
     } finally {
       setIsTranscribing(false);
       setIsLoading(false);
@@ -226,7 +225,7 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
         content: result,
         timestamp: serverTimestamp(),
         version: previousVersion + 1,
-        prompt: lastPrompt, // Use lastPrompt instead of input
+        prompt: lastPrompt,
       });
 
       // Update with the new content and increment version
@@ -245,7 +244,6 @@ const ChatbotPage: React.FC<ChatbotPageProps> = ({
 
       console.log(`${currentPage} content updated successfully`);
       onContentUpdate(currentPage, previousVersion + 1);
-      // Close the chatbot modal
       onClose();
     } catch (error) {
       console.error("Error updating document: ", error);

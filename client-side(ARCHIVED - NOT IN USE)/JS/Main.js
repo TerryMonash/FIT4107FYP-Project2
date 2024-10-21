@@ -19,12 +19,12 @@ import {
 
 
 const firebaseConfig = {
-    apiKey: "AIzaSyC08ZzFONNjJWqK88YdXTPNL04WDDLyHG8",
-    authDomain: "adaptive-ui-webpage.firebaseapp.com",
-    projectId: "adaptive-ui-webpage",
-    storageBucket: "adaptive-ui-webpage.appspot.com",
-    messagingSenderId: "986887743719",
-    appId: "1:986887743719:web:e1eb993352fb3edd1b9a42"
+    apiKey: "",
+    authDomain: "",
+    projectId: "",
+    storageBucket: "",
+    messagingSenderId: "",
+    appId: ""
 };
 
 // Initialize Firebase
